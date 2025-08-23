@@ -34,7 +34,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 USER nextjs
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3002
 
 # Start the application
 CMD ["npm", "start"]

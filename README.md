@@ -7,7 +7,7 @@
 ```
 house-work-scheduler/
 ├── packages/
-│   ├── frontend/     # Next.js 프론트엔드 (포트: 3000)
+│   ├── frontend/     # Next.js 프론트엔드 (포트: 3002)
 │   └── backend/      # Nest.js 백엔드 (포트: 3001)
 ├── mongo-init/       # MongoDB 초기화 스크립트
 ├── docker-compose.yml
@@ -21,6 +21,7 @@ house-work-scheduler/
 - TypeScript
 - Tailwind CSS
 - React 19.1.0
+- Port: 3002
 
 ### Backend
 - Nest.js 11.0.1
@@ -52,7 +53,7 @@ npm install --workspace=backend
 npm run dev
 
 # 개별 실행
-npm run dev:frontend  # 프론트엔드만 (포트: 3000)
+npm run dev:frontend  # 프론트엔드만 (포트: 3002)
 npm run dev:backend   # 백엔드만 (포트: 3001)
 ```
 
