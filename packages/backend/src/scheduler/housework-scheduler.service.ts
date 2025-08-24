@@ -376,9 +376,13 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   }
 
   /**
-   * 특정 스케줄 항목의 완료 상태를 변경합니다.
+   * 특정 스케줄 항목의 완료 상태와 담당자를 변경합니다.
    */
-  updateDoneStatus(id: string, isDone: boolean): ScheduledHouseWork | null {
+  updateDoneStatus(
+    id: string,
+    isDone: boolean,
+    assignee?: string,
+  ): ScheduledHouseWork | null {
     if (!this.schedule) {
       return null;
     }
@@ -389,7 +393,13 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     }
 
     item.isDone = isDone;
-    this.logger.log(`스케줄 항목 ${id} 완료 상태 변경: ${isDone}`);
+    if (assignee !== undefined) {
+      item.assignee = assignee;
+    }
+
+    this.logger.log(
+      `스케줄 항목 ${id} 업데이트: 완료=${isDone}, 담당자=${assignee || '변경없음'}`,
+    );
 
     return item;
   }

@@ -7,6 +7,7 @@ import {
 
 interface UpdateDoneStatusDto {
   isDone: boolean;
+  assignee?: string;
 }
 
 @Controller('scheduler')
@@ -75,7 +76,11 @@ export class SchedulerController {
     @Param('id') id: string,
     @Body() updateDto: UpdateDoneStatusDto,
   ) {
-    return this.schedulerService.updateDoneStatus(id, updateDto.isDone);
+    return this.schedulerService.updateDoneStatus(
+      id,
+      updateDto.isDone,
+      updateDto.assignee,
+    );
   }
 
   @Post('refresh')

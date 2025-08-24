@@ -3,11 +3,15 @@
 import { useEffect, useState } from "react";
 import ProfileSelector from "./components/ProfileSelector";
 import { useNotionApi } from "./hooks/useNotionApi";
+import { useMonthlySchedule } from "./hooks/useSchedulerApi"; 
+import Day from "./components/modules/Day";
 
 export default function Home() {
-  const { fetchDatabase, loading, error } = useNotionApi();
+  const { fetchDatabase } = useNotionApi();
 
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { data: monthlySchedule } = useMonthlySchedule(currentDate.getFullYear(), currentDate.getMonth() + 1);
+  console.log(monthlySchedule);
 
   // 현재 월의 첫 번째 날과 마지막 날 계산
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -38,6 +42,16 @@ export default function Home() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
+  const formatDate = (date: Date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0"); // +1 필수
+    const day = String(d.getDate()).padStart(2, "0");
+
+    const formatted = `${year}-${month}-${day}`;
+    return formatted;
+  }
+
   // 한국어 월 이름
   const monthNames = [
     "1월", "2월", "3월", "4월", "5월", "6월",
@@ -47,23 +61,10 @@ export default function Home() {
   // 요일 이름
   const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
 
-  // 오늘 날짜인지 확인
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
-  };
-
-  // 현재 월의 날짜인지 확인
-  const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === currentDate.getMonth() &&
-           date.getFullYear() === currentDate.getFullYear();
-  };
 
   useEffect(() => {
     fetchDatabase();
-  }, []);
+  }, [fetchDatabase]);
 
 
   return (
@@ -115,25 +116,15 @@ export default function Home() {
 
           {/* 달력 그리드 */}
           <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((date, index) => (
-              <div
-                key={index}
-                className={`
-                  p-3 min-h-[80px] border border-gray-200 rounded-lg cursor-pointer
-                  transition-colors hover:bg-gray-50
-                  ${!isCurrentMonth(date) ? 'bg-gray-50 text-gray-400' : 'bg-white'}
-                  ${isToday(date) ? 'bg-blue-50 border-blue-300' : ''}
-                  ${date.getDay() === 0 ? 'text-red-500' : date.getDay() === 6 ? 'text-blue-500' : 'text-gray-800'}
-                `}
-              >
-                <div className="text-sm font-medium mb-1">
-                  {date.getDate()}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {/* 여기에 할 일 목록이 들어갈 예정 */}
-                </div>
-              </div>
-            ))}
+            {calendarDays.map((date, index) => {
+              // console.log(date.toISOString().split('T')[0]);
+              // console.log(monthlySchedule?.data);
+              const schedules = monthlySchedule?.data.filter((schedule) => schedule.date === formatDate(date)); 
+              console.log("시작!", date, schedules, date.getDate());
+              return <Day key={`${date} ${index}`} date={date} currentDate={currentDate} schedules={schedules} />
+            
+          
+          })}
           </div>
         </div>
 
