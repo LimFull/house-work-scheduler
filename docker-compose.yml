@@ -28,6 +28,10 @@ services:
       NODE_ENV: production
       MONGODB_URI: mongodb://admin:password123@mongodb:27017/house-work-scheduler?authSource=admin
       PORT: 3001
+      NOTION_DATABASE_ID: ${NOTION_DATABASE_ID:-}
+      NOTION_TOKEN: ${NOTION_TOKEN}
+      NOTION_VERSION: ${NOTION_VERSION:-2022-06-28}
+      FRONTEND_URL: http://localhost:3002
     ports:
       - "3001:3001"
     depends_on:
@@ -51,7 +55,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     ports:
       - "3002:3002"
     depends_on:

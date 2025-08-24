@@ -1,103 +1,145 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import ProfileSelector from "./components/ProfileSelector";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // 현재 월의 첫 번째 날과 마지막 날 계산
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  
+  // 달력에 표시할 날짜들 계산 (이전 달의 일부 + 현재 달 + 다음 달의 일부)
+  const startDate = new Date(firstDayOfMonth);
+  startDate.setDate(startDate.getDate() - firstDayOfMonth.getDay());
+  
+  const endDate = new Date(lastDayOfMonth);
+  endDate.setDate(endDate.getDate() + (6 - lastDayOfMonth.getDay()));
+
+  // 달력에 표시할 모든 날짜 생성
+  const calendarDays = [];
+  const current = new Date(startDate);
+  
+  while (current <= endDate) {
+    calendarDays.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+
+  // 월 전환 함수들
+  const goToPreviousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  // 한국어 월 이름
+  const monthNames = [
+    "1월", "2월", "3월", "4월", "5월", "6월",
+    "7월", "8월", "9월", "10월", "11월", "12월"
+  ];
+
+  // 요일 이름
+  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+
+  // 오늘 날짜인지 확인
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  };
+
+  // 현재 월의 날짜인지 확인
+  const isCurrentMonth = (date: Date) => {
+    return date.getMonth() === currentDate.getMonth() &&
+           date.getFullYear() === currentDate.getFullYear();
+  };
+
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-4xl mx-auto">
+
+        {/* 달력 컨테이너 */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          {/* 월 네비게이션 */}
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={goToPreviousMonth}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="이전 달"
+            >
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <h2 className="text-2xl font-semibold text-gray-800">
+              {currentDate.getFullYear()}년 {monthNames[currentDate.getMonth()]}
+            </h2>
+            
+            <button
+              onClick={goToNextMonth}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="다음 달"
+            >
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 요일 헤더 */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {dayNames.map((day, index) => (
+              <div
+                key={day}
+                className={`p-3 text-center font-medium text-sm ${
+                  index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-600'
+                }`}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* 달력 그리드 */}
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map((date, index) => (
+              <div
+                key={index}
+                className={`
+                  p-3 min-h-[80px] border border-gray-200 rounded-lg cursor-pointer
+                  transition-colors hover:bg-gray-50
+                  ${!isCurrentMonth(date) ? 'bg-gray-50 text-gray-400' : 'bg-white'}
+                  ${isToday(date) ? 'bg-blue-50 border-blue-300' : ''}
+                  ${date.getDay() === 0 ? 'text-red-500' : date.getDay() === 6 ? 'text-blue-500' : 'text-gray-800'}
+                `}
+              >
+                <div className="text-sm font-medium mb-1">
+                  {date.getDate()}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {/* 여기에 할 일 목록이 들어갈 예정 */}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="mt-6 text-center">
+          <ProfileSelector />
+          <button
+            onClick={() => setCurrentDate(new Date())}
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            오늘로 돌아가기
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

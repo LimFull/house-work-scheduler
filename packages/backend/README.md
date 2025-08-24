@@ -96,3 +96,46 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+# Backend
+
+Nest.js 백엔드 서버입니다.
+
+## 환경 변수 설정
+
+`.env` 파일을 생성하고 다음 환경 변수들을 설정해주세요:
+
+```env
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/house-work-scheduler
+
+# Notion API
+NOTION_TOKEN=your_notion_integration_token_here
+NOTION_VERSION=2022-06-28
+
+# Server
+PORT=3001
+NODE_ENV=development
+```
+
+## Notion API 설정
+
+1. [Notion Developers](https://developers.notion.com/) 페이지에서 새로운 integration을 생성합니다.
+2. Integration Token을 복사하여 `NOTION_TOKEN` 환경 변수에 설정합니다.
+3. 데이터베이스에 integration을 추가합니다.
+
+## API 엔드포인트
+
+### Notion API
+- `GET /notion/database/:databaseId` - Notion 데이터베이스 조회
+- `GET /notion/health` - Notion API 상태 확인
+
+## 실행 방법
+
+```bash
+# 개발 모드
+npm run dev
+
+# 프로덕션 모드
+npm run start:prod
+```
