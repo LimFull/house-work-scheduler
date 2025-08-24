@@ -1,5 +1,6 @@
 import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
 import { NotionService } from './notion.service';
+import { NotionDatabaseResponse, HouseWorkItem } from '../types/notion.types';
 
 interface ApiError {
   message?: string;
@@ -7,7 +8,13 @@ interface ApiError {
 
 interface ApiResponse {
   success: boolean;
-  data: unknown;
+  data: NotionDatabaseResponse;
+  timestamp: string;
+}
+
+interface HouseWorkApiResponse {
+  success: boolean;
+  data: HouseWorkItem[];
   timestamp: string;
 }
 
@@ -27,7 +34,7 @@ export class NotionController {
         );
       }
 
-      const data: unknown =
+      const data: NotionDatabaseResponse =
         await this.notionService.getDatabaseData(databaseId);
       return {
         success: true,
@@ -43,6 +50,43 @@ export class NotionController {
       throw new HttpException(
         {
           message: 'Failed to fetch Notion database data',
+          error: errorMessage,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('housework')
+  async getHouseWorkItems(): Promise<HouseWorkApiResponse> {
+    try {
+      const databaseId = process.env.NOTION_DATABASE_ID;
+
+      if (!databaseId) {
+        throw new HttpException(
+          'NOTION_DATABASE_ID environment variable is required',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      const rawData = await this.notionService.getDatabaseData(databaseId);
+      const houseWorkItems =
+        this.notionService.transformToHouseWorkItems(rawData);
+
+      return {
+        success: true,
+        data: houseWorkItems,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      const apiError = error as ApiError;
+      const errorMessage = apiError.message || 'Unknown error occurred';
+      throw new HttpException(
+        {
+          message: 'Failed to fetch house work items',
           error: errorMessage,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,

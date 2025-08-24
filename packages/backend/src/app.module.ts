@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { NotionModule } from './notion/notion.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { NotionModule } from './notion/notion.module';
         'mongodb://localhost:27017/house-work-scheduler',
     ),
     NotionModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

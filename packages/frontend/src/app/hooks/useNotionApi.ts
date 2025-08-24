@@ -13,12 +13,12 @@ export function useNotionApi() {
   // 환경 변수에서 API URL 가져오기
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  const fetchDatabase = async (databaseId: string): Promise<NotionApiResponse | null> => {
+  const fetchDatabase = async (): Promise<NotionApiResponse | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${apiUrl}/notion/database/${databaseId}`);
+      const response = await fetch(`${apiUrl}/notion/database`);
       
       if (!response.ok) {
         const errorData = await response.json();

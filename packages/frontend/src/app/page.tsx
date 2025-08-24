@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProfileSelector from "./components/ProfileSelector";
+import { useNotionApi } from "./hooks/useNotionApi";
 
 export default function Home() {
+  const { fetchDatabase, loading, error } = useNotionApi();
+
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // 현재 월의 첫 번째 날과 마지막 날 계산
@@ -57,6 +60,10 @@ export default function Home() {
     return date.getMonth() === currentDate.getMonth() &&
            date.getFullYear() === currentDate.getFullYear();
   };
+
+  useEffect(() => {
+    fetchDatabase();
+  }, []);
 
 
   return (
