@@ -17,8 +17,8 @@ import { HouseWorkHistory } from './scheduler/entities/housework-history.entity'
       type: 'mysql',
       host: process.env.MYSQL_HOST || 'localhost',
       port: parseInt(process.env.MYSQL_PORT || '3306'),
-      username: process.env.MYSQL_USERNAME || 'root',
-      password: process.env.MYSQL_PASSWORD || 'password',
+      username: process.env.MYSQL_USERNAME || 'housework',
+      password: process.env.MYSQL_PASSWORD || 'housework123',
       database: process.env.MYSQL_DATABASE || 'house_work_scheduler',
       entities: [HouseWorkHistory],
       synchronize: process.env.NODE_ENV !== 'production', // 개발 환경에서만 true
