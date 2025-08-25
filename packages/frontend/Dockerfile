@@ -10,7 +10,9 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application with environment variable
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
 
 # Production stage
