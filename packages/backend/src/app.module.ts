@@ -23,6 +23,8 @@ import { HouseWorkHistory } from './scheduler/entities/housework-history.entity'
       entities: [HouseWorkHistory],
       synchronize: process.env.NODE_ENV !== 'production', // 개발 환경에서만 true
       logging: process.env.NODE_ENV === 'development',
+      retryAttempts: 10,
+      retryDelay: 3000,
     }),
     NotionModule,
     SchedulerModule,
