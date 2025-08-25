@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm install
+RUN npm install --force
 
 # Copy source code
 COPY . .
@@ -24,7 +24,7 @@ RUN adduser -S nestjs -u 1001
 
 # Copy package files
 COPY package*.json ./
-RUN npm install --omit=dev && npm cache clean --force
+RUN npm install --omit=dev --force && npm cache clean --force
 
 # Copy built application
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist

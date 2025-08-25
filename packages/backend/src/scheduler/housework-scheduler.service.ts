@@ -6,8 +6,8 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { HouseWorkItem } from '../types/notion.types';
 import {
   ScheduledHouseWork,
@@ -17,10 +17,7 @@ import {
   DayOfWeek,
 } from '../types/scheduler.types';
 import { NotionService } from '../notion/notion.service';
-import {
-  HouseWorkHistory,
-  HouseWorkHistoryDocument,
-} from './schemas/housework-history.schema';
+import { HouseWorkHistory } from './entities/housework-history.entity';
 
 @Injectable()
 export class HouseWorkSchedulerService implements OnModuleInit {
@@ -31,8 +28,8 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   constructor(
     @Inject(forwardRef(() => NotionService))
     private readonly notionService: NotionService,
-    @InjectModel(HouseWorkHistory.name)
-    private readonly houseWorkHistoryModel: Model<HouseWorkHistoryDocument>,
+    @InjectRepository(HouseWorkHistory)
+    private readonly houseWorkHistoryRepository: Repository<HouseWorkHistory>,
   ) {}
 
   /**
@@ -88,7 +85,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   }
 
   /**
-   * 과거 집안일 데이터를 MongoDB에 저장합니다.
+   * 과거 집안일 데이터를 MySQL에 저장합니다.
    */
   private async savePastHouseWorks(
     pastItems: ScheduledHouseWork[],
@@ -98,33 +95,36 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     }
 
     try {
-      const historyDocuments = pastItems.map((item) => ({
-        id: item.id,
-        title: item.title,
-        assignee: item.assignee,
-        memo: item.memo,
-        date: item.date,
-        dayOfWeek: item.dayOfWeek,
-        originalHouseWorkId: item.originalHouseWorkId,
-        url: item.url,
-        isDone: item.isDone,
-        scheduledDate: new Date(),
-      }));
+      const historyEntities = pastItems.map((item) => {
+        const entity = new HouseWorkHistory();
+        entity.houseWorkId = item.id;
+        entity.title = item.title;
+        entity.assignee = item.assignee;
+        entity.memo = item.memo;
+        entity.date = item.date;
+        entity.dayOfWeek = item.dayOfWeek;
+        entity.originalHouseWorkId = item.originalHouseWorkId;
+        entity.url = item.url;
+        entity.isDone = item.isDone;
+        entity.scheduledDate = new Date();
+        return entity;
+      });
 
-      // bulkWrite를 사용하여 중복 방지하면서 저장
-      const operations = historyDocuments.map((doc) => ({
-        updateOne: {
-          filter: {
-            date: doc.date,
-            originalHouseWorkId: doc.originalHouseWorkId,
+      // 중복 방지를 위해 기존 데이터 확인 후 저장
+      for (const entity of historyEntities) {
+        const existing = await this.houseWorkHistoryRepository.findOne({
+          where: {
+            date: entity.date,
+            originalHouseWorkId: entity.originalHouseWorkId,
           },
-          update: { $setOnInsert: doc },
-          upsert: true,
-        },
-      }));
+        });
 
-      const result = await this.houseWorkHistoryModel.bulkWrite(operations);
-      this.logger.log(`과거 집안일 ${result.upsertedCount}개 저장됨`);
+        if (!existing) {
+          await this.houseWorkHistoryRepository.save(entity);
+        }
+      }
+
+      this.logger.log(`과거 집안일 ${historyEntities.length}개 저장됨`);
     } catch (error) {
       this.logger.error('과거 집안일 저장 실패:', error);
     }
@@ -158,7 +158,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       (item) => item.date >= todayString,
     );
 
-    // 과거 데이터를 MongoDB에 저장
+    // 과거 데이터를 MySQL에 저장
     await this.savePastHouseWorks(pastItems);
 
     this.schedule = {
@@ -290,12 +290,12 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     endDate: string,
   ): Promise<HouseWorkHistory[]> {
     try {
-      const pastWorks = await this.houseWorkHistoryModel
-        .find({
-          date: { $gte: startDate, $lte: endDate },
-        })
-        .sort({ date: 1 })
-        .exec();
+      const pastWorks = await this.houseWorkHistoryRepository
+        .createQueryBuilder('history')
+        .where('history.date >= :startDate', { startDate })
+        .andWhere('history.date <= :endDate', { endDate })
+        .orderBy('history.date', 'ASC')
+        .getMany();
 
       return pastWorks;
     } catch (error) {
@@ -306,7 +306,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
 
   /**
    * 월별 스케줄을 조회합니다.
-   * 과거 데이터는 MongoDB에서, 현재/미래 데이터는 스케줄러에서 가져옵니다.
+   * 과거 데이터는 MySQL에서, 현재/미래 데이터는 스케줄러에서 가져옵니다.
    */
   async getMonthlySchedule(year: number, month: number): Promise<any[]> {
     const today = new Date();
@@ -321,7 +321,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
 
     const monthlySchedule: any[] = [];
 
-    // 과거 데이터 조회 (MongoDB에서)
+    // 과거 데이터 조회 (MySQL에서)
     if (startDateString < todayString) {
       const pastEndDate =
         endDateString < todayString ? endDateString : todayString;
@@ -330,9 +330,9 @@ export class HouseWorkSchedulerService implements OnModuleInit {
         pastEndDate,
       );
 
-      // MongoDB 데이터를 ScheduledHouseWork 형태로 변환
+      // MySQL 데이터를 ScheduledHouseWork 형태로 변환
       const pastScheduledWorks = pastWorks.map((work) => ({
-        id: work.id,
+        id: work.houseWorkId,
         title: work.title,
         assignee: work.assignee,
         memo: work.memo,

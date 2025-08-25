@@ -1,21 +1,16 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { HouseWorkSchedulerService } from './housework-scheduler.service';
 import { SchedulerController } from './scheduler.controller';
 import { NotionModule } from '../notion/notion.module';
-import {
-  HouseWorkHistory,
-  HouseWorkHistorySchema,
-} from './schemas/housework-history.schema';
+import { HouseWorkHistory } from './entities/housework-history.entity';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     forwardRef(() => NotionModule),
-    MongooseModule.forFeature([
-      { name: HouseWorkHistory.name, schema: HouseWorkHistorySchema },
-    ]),
+    TypeOrmModule.forFeature([HouseWorkHistory]),
   ],
   controllers: [SchedulerController],
   providers: [HouseWorkSchedulerService],
