@@ -91,8 +91,11 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     return nextWeek;
   }
 
-  private getNextHouseWorkDate(rule: HouseWorkRule): Date | null {
-    const currentDate = new Date();
+  private getNextHouseWorkDate(
+    rule: HouseWorkRule,
+    startDate?: Date
+  ): Date | null {
+    const currentDate = startDate || new Date();
     const validUntil = this.getNextWeekEndDate(currentDate);
 
     // 맞는 요일이 나올 때까지 반복하며 다음 집안일 날짜를 찾음
@@ -250,6 +253,74 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   }
 
   /**
+   * id에 해당하는 스케줄을 nextDate부터 이후의 모든 스케줄까지 날짜를 수정합니다.
+   */
+  delayScheduleDate(id: string): boolean {
+    console.log('미루기!!');
+    const schedule = this.schedule?.items.find(item => item.id === id);
+    const startDate = new Date(schedule?.date || '');
+    const startDateOnly = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate()
+    );
+
+    if (!schedule) {
+      console.log('미루기 실패!!');
+      return false;
+    }
+
+    const rule = this.rules.find(rule => rule.title === schedule?.title);
+    if (!rule) {
+      console.log('미루기 실패!! 2');
+      return false;
+    }
+
+    const schedules = this.schedule?.items.filter(item => {
+      const itemDate = new Date(item.date);
+      const itemDateOnly = new Date(
+        itemDate.getFullYear(),
+        itemDate.getMonth(),
+        itemDate.getDate()
+      );
+
+      return (
+        item.originalHouseWorkId === rule.id && itemDateOnly >= startDateOnly
+      );
+    });
+    if (!schedules) {
+      console.log('미루기 실패!! 3');
+      return false;
+    }
+
+    // 뒤에서부터 순서대로 처리
+    for (let i = schedules.length - 1; i >= 0; i--) {
+      const currentSchedule = schedules[i];
+      const currentDate = new Date(currentSchedule.date);
+      console.log('미루기!! 날짜', currentDate);
+      currentDate.setDate(currentDate.getDate() + 1);
+      console.log('미루기!! 날짜2', currentDate);
+
+      // rule에 맞는 날짜가 될 때까지 하루씩 더함
+      while (!rule.days.includes(this.dayOfWeekNames[currentDate.getDay()])) {
+        console.log(
+          '미루기!! 요일',
+          rule.days,
+          this.dayOfWeekNames[currentDate.getDay()]
+        );
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // rule에 맞는 날짜가 되면 날짜를 변경
+      currentSchedule.date = currentDate.toISOString().split('T')[0];
+      console.log('미루기!!최종', currentSchedule.date);
+    }
+
+    console.log('미루기!! 완료', this.schedule?.items);
+    return true;
+  }
+
+  /**
    * 특정 규칙에 대한 스케줄을 생성합니다.
    */
   private generateScheduleForRule(
@@ -351,12 +422,9 @@ export class HouseWorkSchedulerService implements OnModuleInit {
    * 특정 날짜의 스케줄을 반환합니다.
    */
   getScheduleForDate(date: string): ScheduledHouseWork[] {
-    console.log('getScheduleForDate', date);
     if (!this.schedule) {
-      console.log('getScheduleForDate return []', this.schedule);
       return [];
     }
-    console.log('getScheduleForDate return', this.schedule.items);
     return this.schedule.items.filter(item => item.date === date);
   }
 

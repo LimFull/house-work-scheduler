@@ -44,9 +44,9 @@ export default function Day({ date, currentDate, schedules }: Props) {
       >
         <div className="text-sm font-medium mb-1">{date.getDate()}</div>
         <div className="text-xs text-gray-500">
-          {schedules?.map((schedule: ScheduledHouseWork) => (
-            <ScheduleItem key={schedule.id} schedule={schedule} />
-          ))}
+          {schedules?.map((schedule: ScheduledHouseWork) => {
+            return <ScheduleItem key={schedule.id} schedule={schedule} />;
+          })}
         </div>
       </div>
     </Link>

@@ -88,4 +88,12 @@ export class SchedulerController {
     await this.schedulerService.refreshSchedule();
     return { message: '스케줄 새로고침 완료' };
   }
+
+  /**
+   * id에 해당하는 스케쥴을 가능한 다음 날짜로 미루고, 이후 스케줄들도 재설정한다.
+   */
+  @Put('schedule/:id/delay')
+  delaySchedule(@Param('id') id: string) {
+    return this.schedulerService.delayScheduleDate(id);
+  }
 }

@@ -187,3 +187,23 @@ export const useRefreshSchedule = () => {
     },
   });
 };
+
+// 스케줄 미루기
+export const useDelaySchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const response = await fetch(
+        `${API_BASE_URL}/scheduler/schedule/${id}/delay`,
+        {
+          method: 'PUT',
+        }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      // 모든 스케줄 관련 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ['scheduler'] });
+    },
+  });
+};
