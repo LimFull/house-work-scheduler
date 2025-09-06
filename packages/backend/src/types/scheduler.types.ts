@@ -10,6 +10,7 @@ export interface ScheduledHouseWork {
   originalHouseWorkId: string; // 원본 집안일 ID
   url: string; // Notion 페이지 URL
   isDone: boolean; // 완료 여부
+  emoji: string; // 이모지
 }
 
 export interface HouseWorkSchedule {
@@ -30,4 +31,5 @@ export interface HouseWorkRule {
   memo: string;
   url: string;
   isDone: boolean; // 완료 여부
+  emoji: string; // 이모지
 }

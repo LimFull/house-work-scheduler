@@ -103,6 +103,7 @@ export class NotionService {
       lastEditedTime: page.last_edited_time,
       url: page.url,
       isDone: false, // 기본값 false
+      emoji: this.extractEmoji(page),
     }));
   }
 
@@ -144,6 +145,14 @@ export class NotionService {
       return daysProperty.multi_select.map((item: any) => item.name);
     }
     return [];
+  }
+
+  private extractEmoji(page: any): string {
+    const emojiProperty = page.properties.이모지;
+    if (emojiProperty?.rich_text?.length > 0) {
+      return emojiProperty.rich_text[0].plain_text;
+    }
+    return '';
   }
 
   private extractAssignee(page: any): string {

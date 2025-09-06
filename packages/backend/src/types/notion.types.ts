@@ -111,6 +111,7 @@ export interface HouseWorkItem {
   lastEditedTime: string;
   url: string;
   isDone: boolean;
+  emoji: string;
 }
 
 // 집안일 데이터 변환 함수의 타입

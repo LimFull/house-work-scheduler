@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 interface NotionApiResponse {
   success: boolean;
@@ -13,7 +13,7 @@ export function useNotionApi() {
   // 환경 변수에서 API URL 가져오기
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  const fetchDatabase = async (): Promise<NotionApiResponse | null> => {
+  const fetchDatabase = useCallback(async (): Promise<NotionApiResponse | null> => {
     setLoading(true);
     setError(null);
 
@@ -34,16 +34,16 @@ export function useNotionApi() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
-  const checkHealth = async (): Promise<boolean> => {
+  const checkHealth = useCallback(async (): Promise<boolean> => {
     try {
       const response = await fetch(`${apiUrl}/notion/health`);
       return response.ok;
     } catch {
       return false;
     }
-  };
+  }, [apiUrl]);
 
   return {
     fetchDatabase,

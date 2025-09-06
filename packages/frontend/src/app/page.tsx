@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import ProfileSelector from "./components/ProfileSelector";
-import { useNotionApi } from "./hooks/useNotionApi";
-import { useMonthlySchedule } from "./hooks/useSchedulerApi"; 
+import { useState } from "react";
 import Day from "./components/modules/Day";
+import ProfileSelector from "./components/ProfileSelector";
+import { useMonthlySchedule } from "./hooks/useSchedulerApi";
+import { ScheduledHouseWork } from "@/types/schedule";
 
 export default function Home() {
-  const { fetchDatabase } = useNotionApi();
-
   const [currentDate, setCurrentDate] = useState(new Date());
   const { data: monthlySchedule } = useMonthlySchedule(currentDate.getFullYear(), currentDate.getMonth() + 1);
   console.log(monthlySchedule);
@@ -61,18 +59,12 @@ export default function Home() {
   // 요일 이름
   const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
 
-
-  useEffect(() => {
-    fetchDatabase();
-  }, [fetchDatabase]);
-
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
 
         {/* 달력 컨테이너 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-3">
           {/* 월 네비게이션 */}
           <div className="flex items-center justify-between mb-6">
             <button
@@ -117,14 +109,10 @@ export default function Home() {
           {/* 달력 그리드 */}
           <div className="grid grid-cols-7 gap-1">
             {calendarDays.map((date, index) => {
-              // console.log(date.toISOString().split('T')[0]);
-              // console.log(monthlySchedule?.data);
               const schedules = monthlySchedule?.data.filter((schedule) => schedule.date === formatDate(date)); 
-              console.log("시작!", date, schedules, date.getDate());
-              return <Day key={`${date} ${index}`} date={date} currentDate={currentDate} schedules={schedules} />
             
-          
-          })}
+              return <Day key={`${date} ${index}`} date={date} currentDate={currentDate} schedules={schedules as ScheduledHouseWork[]} />
+            })}
           </div>
         </div>
 

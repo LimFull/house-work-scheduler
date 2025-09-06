@@ -1,15 +1,5 @@
-interface ScheduledHouseWork {
-  id: string;
-  title: string;
-  assignee: string;
-  memo: string;
-  date: string;
-  dayOfWeek: string;
-  originalHouseWorkId: string;
-  url: string;
-  isDone: boolean;
-  source?: 'database' | 'scheduler';
-}
+import { ScheduledHouseWork } from "@/types/schedule";
+import ScheduleItem from "./ScheduleItem";
 
 interface Props {
   date: Date;
@@ -38,7 +28,7 @@ export default function Day({ date, currentDate, schedules }: Props) {
   return (
     <div
       className={`
-        p-3 min-h-[80px] border border-gray-200 rounded-lg cursor-pointer
+        p-1 min-h-[80px] border border-gray-200 rounded-lg cursor-pointer
         transition-colors hover:bg-gray-50
         ${!isCurrentMonth(date) ? 'bg-gray-50 text-gray-400' : 'bg-white'}
         ${isToday(date) ? 'bg-blue-50 border-blue-300' : ''}
@@ -50,9 +40,7 @@ export default function Day({ date, currentDate, schedules }: Props) {
       </div>
       <div className="text-xs text-gray-500">
         {schedules?.map((schedule: ScheduledHouseWork) => (
-          <div key={schedule.id}>
-            {schedule.title}
-          </div>
+          <ScheduleItem key={schedule.id} schedule={schedule} />
         ))}
       </div>
     </div>

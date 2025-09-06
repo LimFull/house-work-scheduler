@@ -79,18 +79,67 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       memo: item.memo,
       url: item.url,
       isDone: item.isDone,
+      emoji: item.emoji,
     }));
 
     this.logger.log(`집안일 규칙 ${this.rules.length}개 설정됨`);
   }
 
+  private getNextWeekEndDate(currentDate: Date): Date {
+    const nextWeek = new Date(currentDate);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    return nextWeek;
+  }
+
+  private getNextHouseWorkDate(rule: HouseWorkRule): Date | null {
+    const currentDate = new Date();
+    const validUntil = this.getNextWeekEndDate(currentDate);
+
+    // 맞는 요일이 나올 때까지 반복하며 다음 집안일 날짜를 찾음
+    while (currentDate <= new Date(validUntil)) {
+      const dayOfWeek = this.dayOfWeekNames[currentDate.getDay()];
+      if (rule.days.includes(dayOfWeek)) {
+        return currentDate;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return null;
+  }
+
+  private async getLastHouseWorkDate(
+    rule: HouseWorkRule,
+  ): Promise<Date | null> {
+    const lastHouseWorkHistory = await this.houseWorkHistoryRepository.findOne({
+      where: {
+        title: rule.title,
+      },
+      order: {
+        date: 'DESC', // 날짜를 내림차순으로 정렬하여 가장 마지막 날짜를 찾음
+      },
+    });
+
+    if (lastHouseWorkHistory) {
+      return new Date(lastHouseWorkHistory.date);
+    }
+
+    // 저장된 집안일 데이터가 없으면, 가장 가까운 미래의 집안일 날짜를 반환
+    if (!lastHouseWorkHistory) {
+      return this.getNextHouseWorkDate(rule);
+    }
+
+    return null;
+  }
+
   /**
    * 과거 집안일 데이터를 MySQL에 저장합니다.
    */
-  private async savePastHouseWorks(
-    pastItems: ScheduledHouseWork[],
-  ): Promise<void> {
-    if (pastItems.length === 0) {
+  async savePastHouseWorks(): Promise<void> {
+    const today = new Date();
+    const pastItems = this.schedule?.items.filter(
+      (item) => today > new Date(item.date),
+    );
+
+    if (!pastItems || pastItems.length === 0) {
       return;
     }
 
@@ -130,6 +179,29 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     }
   }
 
+  removePastHouseWorksFromMemory(): void {
+    const today = new Date();
+    const todayDateOnly = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+
+    if (!this.schedule) {
+      return;
+    }
+
+    this.schedule.items = this.schedule.items.filter((item) => {
+      const itemDate = new Date(item.date);
+      const itemDateOnly = new Date(
+        itemDate.getFullYear(),
+        itemDate.getMonth(),
+        itemDate.getDate(),
+      );
+      return todayDateOnly > itemDateOnly;
+    });
+  }
+
   /**
    * 스케줄을 생성합니다.
    */
@@ -141,9 +213,16 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     const scheduledItems: ScheduledHouseWork[] = [];
 
     for (const rule of this.rules) {
+      const lastHouseWorkDate = await this.getLastHouseWorkDate(rule);
+
+      // rule이 존재하면, 정상적인 경우라면 lastHouseWorkDate가 존재해야 함
+      if (!lastHouseWorkDate) {
+        continue;
+      }
+
       const ruleSchedules = this.generateScheduleForRule(
         rule,
-        today,
+        lastHouseWorkDate,
         validUntil,
       );
       scheduledItems.push(...ruleSchedules);
@@ -157,9 +236,6 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     const currentAndFutureItems = scheduledItems.filter(
       (item) => item.date >= todayString,
     );
-
-    // 과거 데이터를 MySQL에 저장
-    await this.savePastHouseWorks(pastItems);
 
     this.schedule = {
       items: currentAndFutureItems,
@@ -183,14 +259,18 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   ): ScheduledHouseWork[] {
     const schedules: ScheduledHouseWork[] = [];
     const currentDate = new Date(startDate);
-
+    const lastDate = new Date(currentDate);
+    // while (currentDate <= endDate && rule.title === '방쓸기') {
     while (currentDate <= endDate) {
       const dayOfWeek = this.dayOfWeekNames[currentDate.getDay()];
+      if (rule.title === '스팀 청소') {
+        console.log('!!!!!!', currentDate, lastDate, rule.frequency);
+      }
 
       // 해당 요일에 집안일이 있는지 확인
       if (rule.days.includes(dayOfWeek)) {
         // 빈도에 따라 스케줄 추가
-        if (this.shouldAddToSchedule(rule.frequency, currentDate, startDate)) {
+        if (this.shouldAddToSchedule(rule.frequency, currentDate, lastDate)) {
           schedules.push({
             id: `${rule.id}_${currentDate.toISOString().split('T')[0]}`,
             title: rule.title,
@@ -201,7 +281,11 @@ export class HouseWorkSchedulerService implements OnModuleInit {
             originalHouseWorkId: rule.id,
             url: rule.url,
             isDone: rule.isDone,
+            emoji: rule.emoji,
           });
+          lastDate.setDate(currentDate.getDate());
+          lastDate.setMonth(currentDate.getMonth());
+          lastDate.setFullYear(currentDate.getFullYear());
         }
       }
 
@@ -223,18 +307,24 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     const daysDiff = Math.floor(
       (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
     );
+    const monthDiff = currentDate.getMonth() - startDate.getMonth();
+
+    // 동일한 날이면 true 반환
+    if (daysDiff === 0) {
+      return true;
+    }
 
     switch (frequency) {
       case '매일':
         return true;
       case '격일':
-        return daysDiff % 2 === 0;
+        return daysDiff >= 2;
       case '매주':
-        return daysDiff % 7 === 0;
+        return daysDiff >= 7;
       case '격주':
-        return daysDiff % 14 === 0;
+        return daysDiff >= 14;
       case '매달':
-        return currentDate.getDate() === startDate.getDate();
+        return monthDiff >= 1;
       default:
         return false;
     }
@@ -410,6 +500,13 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   @Cron(CronExpression.EVERY_6_HOURS)
   async refreshSchedule(): Promise<void> {
     this.logger.log('스케줄 새로고침 시작');
+
+    try {
+      await this.savePastHouseWorks();
+      this.removePastHouseWorksFromMemory();
+    } catch (error) {
+      this.logger.error('과거 집안일 저장 실패:', error);
+    }
 
     try {
       await this.notionService.updateSchedulerFromNotion();
