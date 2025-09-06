@@ -29,7 +29,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     @Inject(forwardRef(() => NotionService))
     private readonly notionService: NotionService,
     @InjectRepository(HouseWorkHistory)
-    private readonly houseWorkHistoryRepository: Repository<HouseWorkHistory>,
+    private readonly houseWorkHistoryRepository: Repository<HouseWorkHistory>
   ) {}
 
   /**
@@ -70,7 +70,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
    * 집안일 규칙을 설정합니다.
    */
   setRules(houseWorkItems: HouseWorkItem[]): void {
-    this.rules = houseWorkItems.map((item) => ({
+    this.rules = houseWorkItems.map(item => ({
       id: item.id,
       title: item.title,
       days: item.days as DayOfWeek[],
@@ -107,7 +107,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   }
 
   private async getLastHouseWorkDate(
-    rule: HouseWorkRule,
+    rule: HouseWorkRule
   ): Promise<Date | null> {
     const lastHouseWorkHistory = await this.houseWorkHistoryRepository.findOne({
       where: {
@@ -136,7 +136,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   async savePastHouseWorks(): Promise<void> {
     const today = new Date();
     const pastItems = this.schedule?.items.filter(
-      (item) => today > new Date(item.date),
+      item => today > new Date(item.date)
     );
 
     if (!pastItems || pastItems.length === 0) {
@@ -144,7 +144,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     }
 
     try {
-      const historyEntities = pastItems.map((item) => {
+      const historyEntities = pastItems.map(item => {
         const entity = new HouseWorkHistory();
         entity.houseWorkId = item.id;
         entity.title = item.title;
@@ -184,19 +184,19 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     const todayDateOnly = new Date(
       today.getFullYear(),
       today.getMonth(),
-      today.getDate(),
+      today.getDate()
     );
 
     if (!this.schedule) {
       return;
     }
 
-    this.schedule.items = this.schedule.items.filter((item) => {
+    this.schedule.items = this.schedule.items.filter(item => {
       const itemDate = new Date(item.date);
       const itemDateOnly = new Date(
         itemDate.getFullYear(),
         itemDate.getMonth(),
-        itemDate.getDate(),
+        itemDate.getDate()
       );
       return todayDateOnly > itemDateOnly;
     });
@@ -223,7 +223,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       const ruleSchedules = this.generateScheduleForRule(
         rule,
         lastHouseWorkDate,
-        validUntil,
+        validUntil
       );
       scheduledItems.push(...ruleSchedules);
     }
@@ -232,9 +232,9 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     scheduledItems.sort((a, b) => a.date.localeCompare(b.date));
 
     // 과거 데이터와 현재/미래 데이터 분리
-    const pastItems = scheduledItems.filter((item) => item.date < todayString);
+    const pastItems = scheduledItems.filter(item => item.date < todayString);
     const currentAndFutureItems = scheduledItems.filter(
-      (item) => item.date >= todayString,
+      item => item.date >= todayString
     );
 
     this.schedule = {
@@ -244,7 +244,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     };
 
     this.logger.log(
-      `스케줄 생성 완료: 현재/미래 ${currentAndFutureItems.length}개, 과거 ${pastItems.length}개 저장됨`,
+      `스케줄 생성 완료: 현재/미래 ${currentAndFutureItems.length}개, 과거 ${pastItems.length}개 저장됨`
     );
     return this.schedule;
   }
@@ -255,7 +255,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   private generateScheduleForRule(
     rule: HouseWorkRule,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): ScheduledHouseWork[] {
     const schedules: ScheduledHouseWork[] = [];
     const currentDate = new Date(startDate);
@@ -302,10 +302,10 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   private shouldAddToSchedule(
     frequency: Frequency,
     currentDate: Date,
-    startDate: Date,
+    startDate: Date
   ): boolean {
     const daysDiff = Math.floor(
-      (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
     const monthDiff = currentDate.getMonth() - startDate.getMonth();
 
@@ -351,10 +351,13 @@ export class HouseWorkSchedulerService implements OnModuleInit {
    * 특정 날짜의 스케줄을 반환합니다.
    */
   getScheduleForDate(date: string): ScheduledHouseWork[] {
+    console.log('getScheduleForDate', date);
     if (!this.schedule) {
+      console.log('getScheduleForDate return []', this.schedule);
       return [];
     }
-    return this.schedule.items.filter((item) => item.date === date);
+    console.log('getScheduleForDate return', this.schedule.items);
+    return this.schedule.items.filter(item => item.date === date);
   }
 
   /**
@@ -362,13 +365,13 @@ export class HouseWorkSchedulerService implements OnModuleInit {
    */
   getScheduleForPeriod(
     startDate: string,
-    endDate: string,
+    endDate: string
   ): ScheduledHouseWork[] {
     if (!this.schedule) {
       return [];
     }
     return this.schedule.items.filter(
-      (item) => item.date >= startDate && item.date <= endDate,
+      item => item.date >= startDate && item.date <= endDate
     );
   }
 
@@ -377,7 +380,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
    */
   async getPastHouseWorks(
     startDate: string,
-    endDate: string,
+    endDate: string
   ): Promise<HouseWorkHistory[]> {
     try {
       const pastWorks = await this.houseWorkHistoryRepository
@@ -417,11 +420,11 @@ export class HouseWorkSchedulerService implements OnModuleInit {
         endDateString < todayString ? endDateString : todayString;
       const pastWorks = await this.getPastHouseWorks(
         startDateString,
-        pastEndDate,
+        pastEndDate
       );
 
       // MySQL 데이터를 ScheduledHouseWork 형태로 변환
-      const pastScheduledWorks = pastWorks.map((work) => ({
+      const pastScheduledWorks = pastWorks.map(work => ({
         id: work.houseWorkId,
         title: work.title,
         assignee: work.assignee,
@@ -443,11 +446,11 @@ export class HouseWorkSchedulerService implements OnModuleInit {
         startDateString >= todayString ? startDateString : todayString;
       const currentWorks = this.getScheduleForPeriod(
         currentStartDate,
-        endDateString,
+        endDateString
       );
 
       // 스케줄러 데이터에 출처 표시 추가
-      const currentScheduledWorks = currentWorks.map((work) => ({
+      const currentScheduledWorks = currentWorks.map(work => ({
         ...work,
         source: 'scheduler', // 데이터 출처 표시
       }));
@@ -459,7 +462,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     monthlySchedule.sort((a, b) => a.date.localeCompare(b.date));
 
     this.logger.log(
-      `${year}년 ${month}월 스케줄 조회: ${monthlySchedule.length}개 항목`,
+      `${year}년 ${month}월 스케줄 조회: ${monthlySchedule.length}개 항목`
     );
 
     return monthlySchedule;
@@ -471,13 +474,13 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   updateDoneStatus(
     id: string,
     isDone: boolean,
-    assignee?: string,
+    assignee?: string
   ): ScheduledHouseWork | null {
     if (!this.schedule) {
       return null;
     }
 
-    const item = this.schedule.items.find((item) => item.id === id);
+    const item = this.schedule.items.find(item => item.id === id);
     if (!item) {
       return null;
     }
@@ -488,7 +491,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     }
 
     this.logger.log(
-      `스케줄 항목 ${id} 업데이트: 완료=${isDone}, 담당자=${assignee || '변경없음'}`,
+      `스케줄 항목 ${id} 업데이트: 완료=${isDone}, 담당자=${assignee || '변경없음'}`
     );
 
     return item;

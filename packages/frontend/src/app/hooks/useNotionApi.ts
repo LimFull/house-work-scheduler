@@ -13,28 +13,30 @@ export function useNotionApi() {
   // 환경 변수에서 API URL 가져오기
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  const fetchDatabase = useCallback(async (): Promise<NotionApiResponse | null> => {
-    setLoading(true);
-    setError(null);
+  const fetchDatabase =
+    useCallback(async (): Promise<NotionApiResponse | null> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await fetch(`${apiUrl}/notion/database`);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch database');
+      try {
+        const response = await fetch(`${apiUrl}/notion/database`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch database');
+        }
+
+        const data: NotionApiResponse = await response.json();
+        return data;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(errorMessage);
+        return null;
+      } finally {
+        setLoading(false);
       }
-
-      const data: NotionApiResponse = await response.json();
-      return data;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [apiUrl]);
+    }, [apiUrl]);
 
   const checkHealth = useCallback(async (): Promise<boolean> => {
     try {

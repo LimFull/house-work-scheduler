@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from 'react';
 
 interface Props {
   year: number;
@@ -15,13 +15,13 @@ function useSchedule({ year, month }: Props) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/scheduler/monthly/${year}/${month}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/scheduler/monthly/${year}/${month}`
       );
       const data = await response.json();
       return data;
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : 'Unknown error occurred',
+        error instanceof Error ? error.message : 'Unknown error occurred'
       );
     } finally {
       setLoading(false);

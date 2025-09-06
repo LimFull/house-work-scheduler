@@ -17,6 +17,7 @@ house-work-scheduler/
 ## 기술 스택
 
 ### Frontend
+
 - Next.js 15.5.0
 - TypeScript
 - Tailwind CSS
@@ -24,12 +25,14 @@ house-work-scheduler/
 - Port: 3002
 
 ### Backend
+
 - Nest.js 11.0.1
 - TypeScript
 - MySQL (TypeORM)
 - Express
 
 ### Infrastructure
+
 - Docker & Docker Compose
 - MySQL 8.0
 
@@ -108,6 +111,7 @@ docker-compose down
 ## 환경 변수
 
 ### Backend (.env)
+
 ```env
 NODE_ENV=development
 PORT=3001
@@ -120,6 +124,7 @@ FRONTEND_URL=http://localhost:3000
 ```
 
 ### Frontend (.env.local)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
@@ -127,9 +132,11 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 ## API 엔드포인트
 
 ### Health Check
+
 - `GET /health` - 서비스 상태 확인
 
 ### 기본 엔드포인트
+
 - `GET /` - 기본 메시지
 
 ## 데이터베이스 마이그레이션
@@ -147,6 +154,7 @@ npm run migrate:mongo-to-mysql
 ```
 
 **주의사항:**
+
 - 마이그레이션 전에 기존 MongoDB 데이터를 백업하세요
 - MySQL 서비스가 실행 중이어야 합니다
 - 환경 변수가 올바르게 설정되어야 합니다

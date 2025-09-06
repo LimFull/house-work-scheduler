@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 
@@ -13,7 +13,9 @@ interface UserProfileContextType {
 }
 
 // Context 생성
-export const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
+export const UserProfileContext = createContext<
+  UserProfileContextType | undefined
+>(undefined);
 
 // Provider Props 타입
 interface UserProfileProviderProps {
@@ -43,7 +45,7 @@ export function UserProfileProvider({ children }: UserProfileProviderProps) {
   const value = {
     userType,
     setUserType,
-    isLoading
+    isLoading,
   };
 
   return (

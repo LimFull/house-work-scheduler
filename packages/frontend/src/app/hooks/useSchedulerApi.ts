@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { UserType } from '../contexts/UserProfileContext';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -14,6 +15,7 @@ interface ScheduledHouseWork {
   url: string;
   isDone: boolean;
   source?: 'database' | 'scheduler';
+  emoji: string;
 }
 
 interface MonthlyScheduleResponse {
@@ -22,8 +24,6 @@ interface MonthlyScheduleResponse {
   count: number;
   period: { year: string; month: string };
 }
-
-
 
 // 스케줄러 상태 조회
 export const useSchedulerStatus = () => {
@@ -58,7 +58,9 @@ export const useScheduleForDate = (date: string) => {
   return useQuery({
     queryKey: ['scheduler', 'schedule', 'date', date],
     queryFn: async (): Promise<ScheduledHouseWork[]> => {
-      const response = await fetch(`${API_BASE_URL}/scheduler/schedule/${date}`);
+      const response = await fetch(
+        `${API_BASE_URL}/scheduler/schedule/${date}`
+      );
       if (!response.ok) {
         throw new Error('날짜별 스케줄 조회 실패');
       }
@@ -74,7 +76,7 @@ export const useScheduleForPeriod = (startDate: string, endDate: string) => {
     queryKey: ['scheduler', 'schedule', 'period', startDate, endDate],
     queryFn: async (): Promise<ScheduledHouseWork[]> => {
       const response = await fetch(
-        `${API_BASE_URL}/scheduler/schedule/${startDate}/${endDate}`,
+        `${API_BASE_URL}/scheduler/schedule/${startDate}/${endDate}`
       );
       if (!response.ok) {
         throw new Error('기간별 스케줄 조회 실패');
@@ -91,7 +93,7 @@ export const useMonthlySchedule = (year: number, month: number) => {
     queryKey: ['scheduler', 'monthly', year, month],
     queryFn: async (): Promise<MonthlyScheduleResponse> => {
       const response = await fetch(
-        `${API_BASE_URL}/scheduler/monthly/${year}/${month}`,
+        `${API_BASE_URL}/scheduler/monthly/${year}/${month}`
       );
       if (!response.ok) {
         throw new Error('월별 스케줄 조회 실패');
@@ -108,7 +110,7 @@ export const usePastHouseWorks = (startDate: string, endDate: string) => {
     queryKey: ['scheduler', 'history', startDate, endDate],
     queryFn: async () => {
       const response = await fetch(
-        `${API_BASE_URL}/scheduler/history/${startDate}/${endDate}`,
+        `${API_BASE_URL}/scheduler/history/${startDate}/${endDate}`
       );
       if (!response.ok) {
         throw new Error('과거 집안일 조회 실패');
@@ -131,15 +133,18 @@ export const useUpdateDoneStatus = () => {
     }: {
       id: string;
       isDone: boolean;
-      assignee?: string;
+      assignee?: UserType;
     }): Promise<ScheduledHouseWork> => {
-      const response = await fetch(`${API_BASE_URL}/scheduler/schedule/${id}/done`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isDone, assignee }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/scheduler/schedule/${id}/done`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isDone, assignee }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('완료 상태 업데이트 실패');
@@ -147,14 +152,14 @@ export const useUpdateDoneStatus = () => {
 
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       // 관련된 모든 스케줄 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: ['scheduler', 'schedule'] });
       queryClient.invalidateQueries({ queryKey: ['scheduler', 'monthly'] });
-      
+
       // 특정 날짜 쿼리도 무효화
-      queryClient.invalidateQueries({ 
-        queryKey: ['scheduler', 'schedule', 'date', data.date] 
+      queryClient.invalidateQueries({
+        queryKey: ['scheduler', 'schedule', 'date', data.date],
       });
     },
   });

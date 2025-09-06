@@ -127,6 +127,7 @@ NODE_ENV=development
 ## API 엔드포인트
 
 ### Notion API
+
 - `GET /notion/database/:databaseId` - Notion 데이터베이스 조회
 - `GET /notion/health` - Notion API 상태 확인
 

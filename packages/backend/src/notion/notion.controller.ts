@@ -30,7 +30,7 @@ export class NotionController {
       if (!databaseId) {
         throw new HttpException(
           'NOTION_DATABASE_ID environment variable is required',
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
 
@@ -52,7 +52,7 @@ export class NotionController {
           message: 'Failed to fetch Notion database data',
           error: errorMessage,
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -65,7 +65,7 @@ export class NotionController {
       if (!databaseId) {
         throw new HttpException(
           'NOTION_DATABASE_ID environment variable is required',
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
 
@@ -89,7 +89,7 @@ export class NotionController {
           message: 'Failed to fetch house work items',
           error: errorMessage,
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }

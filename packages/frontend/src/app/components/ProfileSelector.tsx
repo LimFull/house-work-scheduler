@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useUserProfile } from '../hooks/useUserProfile';
 
@@ -15,7 +15,9 @@ export default function ProfileSelector() {
 
   if (userType) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm p-4 mb-6 ${userType === '👦🏻' ? 'border-2 border-blue-300' : 'border-2 border-pink-300'}`}>
+      <div
+        className={`bg-white rounded-lg shadow-sm p-4 mb-6 ${userType === '👦🏻' ? 'border-2 border-blue-300' : 'border-2 border-pink-300'}`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{userType}</span>
@@ -36,7 +38,9 @@ export default function ProfileSelector() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">프로필을 선택해주세요</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        프로필을 선택해주세요
+      </h2>
       <div className="flex gap-4">
         <button
           onClick={() => setUserType('👦🏻')}

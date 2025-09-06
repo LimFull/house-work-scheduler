@@ -71,7 +71,9 @@ async function migrateData() {
         });
 
         if (existing) {
-          console.log(`중복 데이터 건너뛰기: ${mongoRecord.date} - ${mongoRecord.title}`);
+          console.log(
+            `중복 데이터 건너뛰기: ${mongoRecord.date} - ${mongoRecord.title}`
+          );
           skippedCount++;
           continue;
         }
@@ -92,9 +94,14 @@ async function migrateData() {
 
         await houseWorkRepository.save(mysqlEntity);
         migratedCount++;
-        console.log(`마이그레이션 완료: ${mongoRecord.date} - ${mongoRecord.title}`);
+        console.log(
+          `마이그레이션 완료: ${mongoRecord.date} - ${mongoRecord.title}`
+        );
       } catch (error) {
-        console.error(`마이그레이션 실패: ${mongoRecord.date} - ${mongoRecord.title}`, error);
+        console.error(
+          `마이그레이션 실패: ${mongoRecord.date} - ${mongoRecord.title}`,
+          error
+        );
       }
     }
 
@@ -102,7 +109,6 @@ async function migrateData() {
     console.log(`- 성공: ${migratedCount}개`);
     console.log(`- 건너뛴 중복: ${skippedCount}개`);
     console.log(`- 실패: ${mongoData.length - migratedCount - skippedCount}개`);
-
   } catch (error) {
     console.error('마이그레이션 중 오류 발생:', error);
   } finally {
@@ -119,7 +125,7 @@ if (require.main === module) {
       console.log('마이그레이션이 완료되었습니다.');
       process.exit(0);
     })
-    .catch((error) => {
+    .catch(error => {
       console.error('마이그레이션 실패:', error);
       process.exit(1);
     });

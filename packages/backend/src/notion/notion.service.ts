@@ -23,7 +23,7 @@ export class NotionService {
   constructor(
     private readonly httpService: HttpService,
     @Inject(forwardRef(() => HouseWorkSchedulerService))
-    private readonly schedulerService: HouseWorkSchedulerService,
+    private readonly schedulerService: HouseWorkSchedulerService
   ) {}
 
   async getDatabaseData(databaseId: string): Promise<NotionDatabaseResponse> {
@@ -34,14 +34,14 @@ export class NotionService {
       if (!notionToken) {
         throw new HttpException(
           'NOTION_TOKEN environment variable is required',
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
 
       if (!databaseId) {
         throw new HttpException(
           'Database ID is required',
-          HttpStatus.BAD_REQUEST,
+          HttpStatus.BAD_REQUEST
         );
       }
 
@@ -55,8 +55,8 @@ export class NotionService {
               'Notion-Version': notionVersion,
               'Content-Type': 'application/json',
             },
-          },
-        ),
+          }
+        )
       );
 
       return response.data;
@@ -71,7 +71,7 @@ export class NotionService {
             error: notionError.response.data,
             status: notionError.response.status,
           },
-          notionError.response.status,
+          notionError.response.status
         );
       } else if (error instanceof HttpException) {
         // 이미 HttpException인 경우 그대로 던지기
@@ -84,7 +84,7 @@ export class NotionService {
             message: 'Internal Server Error',
             error: errorMessage,
           },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
     }
@@ -92,7 +92,7 @@ export class NotionService {
 
   // 집안일 데이터를 변환하는 유틸리티 메서드
   transformToHouseWorkItems(response: NotionDatabaseResponse): HouseWorkItem[] {
-    return response.results.map((page) => ({
+    return response.results.map(page => ({
       id: page.id,
       title: this.extractTitle(page),
       days: this.extractDays(page),

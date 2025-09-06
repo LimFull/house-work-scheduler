@@ -32,7 +32,7 @@ export class SchedulerController {
   @Get('schedule/:startDate/:endDate')
   getScheduleForPeriod(
     @Param('startDate') startDate: string,
-    @Param('endDate') endDate: string,
+    @Param('endDate') endDate: string
   ): ScheduledHouseWork[] {
     return this.schedulerService.getScheduleForPeriod(startDate, endDate);
   }
@@ -40,11 +40,11 @@ export class SchedulerController {
   @Get('monthly/:year/:month')
   async getMonthlySchedule(
     @Param('year') year: string,
-    @Param('month') month: string,
+    @Param('month') month: string
   ) {
     const monthlySchedule = await this.schedulerService.getMonthlySchedule(
       parseInt(year),
-      parseInt(month),
+      parseInt(month)
     );
     return {
       success: true,
@@ -57,11 +57,11 @@ export class SchedulerController {
   @Get('history/:startDate/:endDate')
   async getPastHouseWorks(
     @Param('startDate') startDate: string,
-    @Param('endDate') endDate: string,
+    @Param('endDate') endDate: string
   ) {
     const pastWorks = await this.schedulerService.getPastHouseWorks(
       startDate,
-      endDate,
+      endDate
     );
     return {
       success: true,
@@ -74,12 +74,12 @@ export class SchedulerController {
   @Put('schedule/:id/done')
   updateDoneStatus(
     @Param('id') id: string,
-    @Body() updateDto: UpdateDoneStatusDto,
+    @Body() updateDto: UpdateDoneStatusDto
   ) {
     return this.schedulerService.updateDoneStatus(
       id,
       updateDto.isDone,
-      updateDto.assignee,
+      updateDto.assignee
     );
   }
 
