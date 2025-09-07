@@ -259,7 +259,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   }
 
   /**
-   * id에 해당하는 스케줄을 nextDate부터 이후의 모든 스케줄까지 날짜를 수정합니다.
+   * id에 해당하는 스케줄을 가능한 다음 날짜로 미루고, 그 날짜에 이미 같은 title의 스케줄이 있으면 미루지 않고 제거합니다.
    */
   delayScheduleDate(id: string): boolean {
     const schedule = this.schedule?.items.find(item => item.id === id);
@@ -274,10 +274,14 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       return false;
     }
 
-    const rule = this.rules.find(rule => rule.title === schedule?.title);
+    const rule = this.rules.find(
+      rule => rule.id === schedule?.originalHouseWorkId
+    );
     if (!rule) {
       return false;
     }
+
+    const days = rule.days;
 
     const schedules = this.schedule?.items.filter(item => {
       const itemDate = new Date(item.date);
@@ -288,28 +292,35 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       );
 
       return (
-        item.originalHouseWorkId === rule.id && itemDateOnly >= startDateOnly
+        item.originalHouseWorkId === rule.id && itemDateOnly > startDateOnly
       );
     });
-    if (!schedules) {
-      return false;
+
+    const nextDate = new Date(startDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    while (!days.includes(this.dayOfWeekNames[nextDate.getDay()])) {
+      nextDate.setDate(nextDate.getDate() + 1);
     }
 
-    // 뒤에서부터 순서대로 처리
-    for (let i = schedules.length - 1; i >= 0; i--) {
-      const currentSchedule = schedules[i];
-      const currentDate = new Date(currentSchedule.date);
-      currentDate.setDate(currentDate.getDate() + 1);
+    this.telegramBotService.sendMessage(
+      `스케줄 미루기: ${schedule.emoji} ${schedule.title}\n${startDate.toISOString().split('T')[0]} (${this.dayOfWeekNames[startDate.getDay()]}) -> ${nextDate.toISOString().split('T')[0]} (${this.dayOfWeekNames[nextDate.getDay()]})`
+    );
 
-      // rule에 맞는 날짜가 될 때까지 하루씩 더함
-      while (!rule.days.includes(this.dayOfWeekNames[currentDate.getDay()])) {
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      // rule에 맞는 날짜가 되면 날짜를 변경
-      currentSchedule.date = currentDate.toISOString().split('T')[0];
+    // 그 날짜에 이미 같은 title의 스케줄이 있으면 미루지 않고 제거
+    if (
+      (schedules?.length ?? 0) > 0 &&
+      schedules?.[0].date === nextDate.toISOString().split('T')[0] &&
+      this.schedule
+    ) {
+      this.schedule.items = this.schedule.items.filter(
+        item => item.id !== schedule.id
+      );
+      return true;
     }
 
+    // 다음 날짜로 미루기
+    schedule.date = nextDate.toISOString().split('T')[0];
     return true;
   }
 
