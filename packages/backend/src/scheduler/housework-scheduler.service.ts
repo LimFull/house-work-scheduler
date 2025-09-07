@@ -18,6 +18,7 @@ import {
 } from '../types/scheduler.types';
 import { NotionService } from '../notion/notion.service';
 import { HouseWorkHistory } from './entities/housework-history.entity';
+import { TelegramBotService } from '../telegram-bot/telegram-bot.service';
 
 @Injectable()
 export class HouseWorkSchedulerService implements OnModuleInit {
@@ -29,7 +30,9 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     @Inject(forwardRef(() => NotionService))
     private readonly notionService: NotionService,
     @InjectRepository(HouseWorkHistory)
-    private readonly houseWorkHistoryRepository: Repository<HouseWorkHistory>
+    private readonly houseWorkHistoryRepository: Repository<HouseWorkHistory>,
+    @Inject(forwardRef(() => TelegramBotService))
+    private readonly telegramBotService: TelegramBotService
   ) {}
 
   /**
@@ -40,6 +43,9 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     try {
       await this.refreshSchedule();
       this.logger.log('집안일 스케줄러 초기화 완료');
+      // await this.telegramBotService.sendMessage(
+      //   '집안일 스케줄러 초기화 완료\n줄바꿈 테스트'
+      // );
     } catch (error) {
       this.logger.error('집안일 스케줄러 초기화 실패:', error);
     }
@@ -256,7 +262,6 @@ export class HouseWorkSchedulerService implements OnModuleInit {
    * id에 해당하는 스케줄을 nextDate부터 이후의 모든 스케줄까지 날짜를 수정합니다.
    */
   delayScheduleDate(id: string): boolean {
-    console.log('미루기!!');
     const schedule = this.schedule?.items.find(item => item.id === id);
     const startDate = new Date(schedule?.date || '');
     const startDateOnly = new Date(
@@ -266,13 +271,11 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     );
 
     if (!schedule) {
-      console.log('미루기 실패!!');
       return false;
     }
 
     const rule = this.rules.find(rule => rule.title === schedule?.title);
     if (!rule) {
-      console.log('미루기 실패!! 2');
       return false;
     }
 
@@ -289,7 +292,6 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       );
     });
     if (!schedules) {
-      console.log('미루기 실패!! 3');
       return false;
     }
 
@@ -297,26 +299,17 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     for (let i = schedules.length - 1; i >= 0; i--) {
       const currentSchedule = schedules[i];
       const currentDate = new Date(currentSchedule.date);
-      console.log('미루기!! 날짜', currentDate);
       currentDate.setDate(currentDate.getDate() + 1);
-      console.log('미루기!! 날짜2', currentDate);
 
       // rule에 맞는 날짜가 될 때까지 하루씩 더함
       while (!rule.days.includes(this.dayOfWeekNames[currentDate.getDay()])) {
-        console.log(
-          '미루기!! 요일',
-          rule.days,
-          this.dayOfWeekNames[currentDate.getDay()]
-        );
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
       // rule에 맞는 날짜가 되면 날짜를 변경
       currentSchedule.date = currentDate.toISOString().split('T')[0];
-      console.log('미루기!!최종', currentSchedule.date);
     }
 
-    console.log('미루기!! 완료', this.schedule?.items);
     return true;
   }
 
@@ -585,6 +578,46 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     } catch (error) {
       this.logger.error('스케줄 새로고침 실패:', error);
     }
+  }
+
+  /**
+   * 매일 오후 6시에 집안일 메시지를 보냅니다.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_6PM)
+  async sendDailyMessage(): Promise<void> {
+    const today = new Date();
+    const todayScheduleItems = this.schedule?.items.filter(
+      item => item.date === today.toISOString().split('T')[0]
+    );
+
+    const manScheduleItems = todayScheduleItems?.filter(
+      item => item.assignee === '👦🏻'
+    );
+    const womanScheduleItems = todayScheduleItems?.filter(
+      item => item.assignee === '👧🏻'
+    );
+    const togetherScheduleItems = todayScheduleItems?.filter(
+      item => item.assignee === '👦🏻👧🏻'
+    );
+
+    const manMessage =
+      (manScheduleItems?.length ?? 0) > 0
+        ? `👦🏻\n${manScheduleItems?.map(item => item.title).join('\n')}`
+        : '';
+    const womanMessage =
+      (womanScheduleItems?.length ?? 0) > 0
+        ? `👧🏻\n${womanScheduleItems?.map(item => item.title).join('\n')}`
+        : '';
+    const togetherMessage =
+      (togetherScheduleItems?.length ?? 0) > 0
+        ? `👦🏻👧🏻\n${togetherScheduleItems?.map(item => item.title).join('\n')}`
+        : '';
+    const messages = [manMessage, womanMessage, togetherMessage].filter(
+      message => message !== ''
+    );
+    const message = messages.join('\n\n');
+
+    await this.telegramBotService.sendMessage(message);
   }
 
   /**

@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { NotionModule } from './notion/notion.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { HouseWorkHistory } from './scheduler/entities/housework-history.entity';
+import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { HouseWorkHistory } from './scheduler/entities/housework-history.entity'
     }),
     NotionModule,
     SchedulerModule,
+    TelegramBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

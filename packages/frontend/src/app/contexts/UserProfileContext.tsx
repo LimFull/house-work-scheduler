@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 
 // 사용자 타입 정의
-export type UserType = '👦🏻' | '👧🏻';
+export type UserType = '👦🏻' | '👧🏻' | '👦🏻👧🏻';
 
 // Context 타입 정의
 interface UserProfileContextType {

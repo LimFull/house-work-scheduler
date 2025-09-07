@@ -18,7 +18,7 @@ function DetailPage() {
     <div className="p-4 max-w-screen-md mx-auto">
       {schedules?.map(schedule => (
         <div
-          className={`p-4 my-4 border-b border-gray-200 flex justify-between ${schedule.assignee === '👦🏻' ? 'bg-blue-100' : 'bg-pink-100'}`}
+          className={`p-4 my-4 border-b border-gray-200 flex justify-between ${schedule.assignee === '👦🏻' ? 'bg-blue-100' : schedule.assignee === '👧🏻' ? 'bg-pink-100' : 'bg-yellow-100'}`}
           key={schedule.id}
         >
           <div className="flex items-center gap-3">
@@ -37,7 +37,8 @@ function DetailPage() {
               updateDoneStatus({
                 id: schedule.id,
                 isDone: !schedule.isDone,
-                assignee: userType || undefined,
+                assignee:
+                  schedule.assignee === '👦🏻👧🏻' ? '👦🏻👧🏻' : userType || undefined,
               })
             }
           >

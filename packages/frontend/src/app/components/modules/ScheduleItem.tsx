@@ -10,7 +10,7 @@ function ScheduleItem({ schedule }: Props) {
 
   return (
     <div
-      className={`text-sm font-medium mb-1 rounded-md text-center ${assignee === '👦🏻' ? 'bg-blue-100' : 'bg-pink-100'}`}
+      className={`text-sm font-medium mb-1 rounded-md text-center ${assignee === '👦🏻' ? 'bg-blue-100' : assignee === '👧🏻' ? 'bg-pink-100' : 'bg-yellow-100'}`}
     >
       {schedule.emoji} {isDone ? '✅' : ''}
     </div>
