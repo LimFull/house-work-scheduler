@@ -123,8 +123,10 @@ export class NotionService {
       // 스케줄러에 규칙 설정
       this.schedulerService.setRules(houseWorkItems);
 
-      // 스케줄 생성
-      this.schedulerService.generateSchedule();
+      if (this.schedulerService.getShouldScheduleUpdate()) {
+        // 스케줄 생성
+        this.schedulerService.generateSchedule();
+      }
     } catch (error) {
       console.error('스케줄러 업데이트 실패:', error);
       throw error;

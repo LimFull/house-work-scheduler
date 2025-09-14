@@ -98,6 +98,10 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     this.logger.log(`집안일 규칙 ${this.rules.length}개 설정됨`);
   }
 
+  getShouldScheduleUpdate(): boolean {
+    return this.shouldScheduleUpdate;
+  }
+
   private getNextWeekEndDate(currentDate: Date): Date {
     const nextWeek = new Date(currentDate);
     nextWeek.setDate(nextWeek.getDate() + 7);
