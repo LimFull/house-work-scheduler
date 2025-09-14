@@ -49,6 +49,9 @@ export class HouseWorkHistory {
   @CreateDateColumn()
   createdAt: Date;
 
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  emoji: string;
+
   @UpdateDateColumn()
   updatedAt: Date;
 }

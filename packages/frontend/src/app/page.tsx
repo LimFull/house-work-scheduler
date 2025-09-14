@@ -13,7 +13,6 @@ export default function Home() {
     currentDate.getFullYear(),
     currentDate.getMonth() + 1
   );
-  console.log(monthlySchedule);
 
   // 현재 월의 첫 번째 날과 마지막 날 계산
   const firstDayOfMonth = new Date(

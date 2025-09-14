@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS housework_history (
   originalHouseWorkId VARCHAR(255) NOT NULL,
   url VARCHAR(500),
   isDone BOOLEAN DEFAULT FALSE,
+  emoji VARCHAR(10) DEFAULT '',
   scheduledDate DATETIME NOT NULL,
   completedDate DATETIME,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

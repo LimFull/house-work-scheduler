@@ -26,11 +26,6 @@ export default function Day({ date, currentDate, schedules }: Props) {
     );
   };
 
-  if (schedules && schedules.length > 0) {
-    console.log({ date, getDate: date.getDate() });
-    console.log(schedules);
-  }
-
   return (
     <Link href={`/detail/${formatDate(date)}`}>
       <div

@@ -25,6 +25,8 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   private readonly logger = new Logger(HouseWorkSchedulerService.name);
   private schedule: HouseWorkSchedule | null = null;
   private rules: HouseWorkRule[] = [];
+  private pastRules: HouseWorkRule[] = [];
+  private shouldScheduleUpdate: boolean = false;
 
   constructor(
     @Inject(forwardRef(() => NotionService))
@@ -87,6 +89,11 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       isDone: item.isDone,
       emoji: item.emoji,
     }));
+
+    // this.rules와 this.pastRules를 비교하여 차이가 있는 경우에만 this.shouldScheduleUpdate를 true로 설정
+    this.shouldScheduleUpdate = this.rules.some(
+      rule => !this.pastRules.some(pastRule => pastRule.id === rule.id)
+    );
 
     this.logger.log(`집안일 규칙 ${this.rules.length}개 설정됨`);
   }
@@ -338,9 +345,6 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     // while (currentDate <= endDate && rule.title === '방쓸기') {
     while (currentDate <= endDate) {
       const dayOfWeek = this.dayOfWeekNames[currentDate.getDay()];
-      if (rule.title === '스팀 청소') {
-        console.log('!!!!!!', currentDate, lastDate, rule.frequency);
-      }
 
       // 해당 요일에 집안일이 있는지 확인
       if (rule.days.includes(dayOfWeek)) {
@@ -496,18 +500,22 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       );
 
       // MySQL 데이터를 ScheduledHouseWork 형태로 변환
-      const pastScheduledWorks = pastWorks.map(work => ({
-        id: work.houseWorkId,
-        title: work.title,
-        assignee: work.assignee,
-        memo: work.memo,
-        date: work.date,
-        dayOfWeek: work.dayOfWeek,
-        originalHouseWorkId: work.originalHouseWorkId,
-        url: work.url,
-        isDone: work.isDone,
-        source: 'database', // 데이터 출처 표시
-      }));
+      const pastScheduledWorks: ScheduledHouseWork[] = pastWorks.map(
+        work =>
+          ({
+            id: work.houseWorkId,
+            title: work.title,
+            assignee: work.assignee,
+            memo: work.memo,
+            date: work.date,
+            dayOfWeek: work.dayOfWeek,
+            originalHouseWorkId: work.originalHouseWorkId,
+            url: work.url,
+            isDone: work.isDone,
+            source: 'database', // 데이터 출처 표시
+            emoji: work.emoji,
+          }) as ScheduledHouseWork
+      );
 
       monthlySchedule.push(...pastScheduledWorks);
     }
