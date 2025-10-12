@@ -27,6 +27,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   private rules: HouseWorkRule[] = [];
   private pastRules: HouseWorkRule[] = [];
   private shouldScheduleUpdate: boolean = false;
+  private deletedScheduleIds: Set<string> = new Set(); // 사용자가 삭제한 집안일 ID 추적
 
   constructor(
     @Inject(forwardRef(() => NotionService))
@@ -221,6 +222,26 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       );
       return itemDateOnly >= todayDateOnly; // 오늘 이후(오늘 포함)만 남김
     });
+
+    // 과거 날짜의 삭제 기록도 정리 (메모리 절약)
+    const todayString = today.toISOString().split('T')[0];
+    const idsToRemove: string[] = [];
+
+    this.deletedScheduleIds.forEach(id => {
+      // ID 형식: {ruleId}_{date} 또는 one-time-{uuid}_{date}
+      const dateMatch = id.match(/_(\d{4}-\d{2}-\d{2})$/);
+      if (dateMatch && dateMatch[1] < todayString) {
+        idsToRemove.push(id);
+      }
+    });
+
+    idsToRemove.forEach(id => {
+      this.deletedScheduleIds.delete(id);
+    });
+
+    if (idsToRemove.length > 0) {
+      this.logger.log(`과거 날짜 삭제 기록 ${idsToRemove.length}개 정리됨`);
+    }
   }
 
   /**
@@ -230,6 +251,18 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     const today = new Date();
     const todayString = today.toISOString().split('T')[0];
     const validUntil = this.getNextMonthEndDate(today);
+
+    // 기존의 일회성(수동 추가) 집안일 보존
+    const existingOneTimeSchedules: ScheduledHouseWork[] = [];
+    if (this.schedule?.items) {
+      existingOneTimeSchedules.push(
+        ...this.schedule.items.filter(
+          item =>
+            item.originalHouseWorkId.startsWith('one-time-') &&
+            item.date >= todayString
+        )
+      );
+    }
 
     const scheduledItems: ScheduledHouseWork[] = [];
 
@@ -258,14 +291,26 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       item => item.date >= todayString
     );
 
+    // 사용자가 삭제한 집안일 제외
+    const filteredCurrentAndFutureItems = currentAndFutureItems.filter(
+      item => !this.deletedScheduleIds.has(item.id)
+    );
+
+    // 보존한 일회성 집안일을 다시 추가
+    filteredCurrentAndFutureItems.push(...existingOneTimeSchedules);
+
+    // 날짜순으로 재정렬
+    filteredCurrentAndFutureItems.sort((a, b) => a.date.localeCompare(b.date));
+
     this.schedule = {
-      items: currentAndFutureItems,
+      items: filteredCurrentAndFutureItems,
       lastUpdated: new Date().toISOString(),
       validUntil: validUntil.toISOString().split('T')[0],
     };
 
+    const deletedCount = this.deletedScheduleIds.size;
     this.logger.log(
-      `스케줄 생성 완료: 현재/미래 ${currentAndFutureItems.length}개, 과거 ${pastItems.length}개 저장됨`
+      `스케줄 생성 완료: 현재/미래 ${filteredCurrentAndFutureItems.length}개 (일회성 ${existingOneTimeSchedules.length}개 포함, 삭제됨 ${deletedCount}개 제외), 과거 ${pastItems.length}개 저장됨`
     );
     return this.schedule;
   }
@@ -746,6 +791,8 @@ export class HouseWorkSchedulerService implements OnModuleInit {
     const deleted = this.schedule.items.length < initialLength;
 
     if (deleted) {
+      // 삭제된 집안일 ID를 기록하여 재생성 시 제외
+      this.deletedScheduleIds.add(id);
       this.logger.log(`스케줄 삭제: ${id}`);
     }
 
