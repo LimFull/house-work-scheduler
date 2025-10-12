@@ -6,10 +6,11 @@ import {
   useDelaySchedule,
   useAddSchedule,
   useDeleteSchedule,
+  useRules,
 } from '@/app/hooks/useSchedulerApi';
 import { useParams } from 'next/navigation';
 import { useUserProfile } from '@/app/hooks/useUserProfile';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function DetailPage() {
   const { userType } = useUserProfile();
@@ -19,13 +20,31 @@ function DetailPage() {
   const { mutate: delaySchedule } = useDelaySchedule();
   const { mutate: addSchedule } = useAddSchedule();
   const { mutate: deleteSchedule } = useDeleteSchedule();
+  const { data: rules } = useRules();
 
   // 추가 폼 상태
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [addMode, setAddMode] = useState<'custom' | 'from-rule'>('custom');
+  const [selectedRuleId, setSelectedRuleId] = useState<string>('');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskEmoji, setNewTaskEmoji] = useState('📝');
   const [newTaskAssignee, setNewTaskAssignee] = useState(userType || '👦🏻');
   const [newTaskMemo, setNewTaskMemo] = useState('');
+
+  // 규칙 선택 시 자동으로 필드 채우기
+  useEffect(() => {
+    if (addMode === 'from-rule' && selectedRuleId) {
+      const selectedRule = rules?.find(r => r.id === selectedRuleId);
+      if (selectedRule) {
+        setNewTaskTitle(selectedRule.title);
+        setNewTaskEmoji(selectedRule.emoji);
+        setNewTaskAssignee(
+          selectedRule.assignee as '👦🏻' | '👧🏻' | '👦🏻👧🏻'
+        );
+        setNewTaskMemo(selectedRule.memo);
+      }
+    }
+  }, [selectedRuleId, addMode, rules]);
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) {
@@ -47,6 +66,9 @@ function DetailPage() {
           setNewTaskTitle('');
           setNewTaskEmoji('📝');
           setNewTaskMemo('');
+          setNewTaskAssignee(userType || '👦🏻');
+          setSelectedRuleId('');
+          setAddMode('custom');
           setIsAddingTask(false);
         },
       }
@@ -76,7 +98,55 @@ function DetailPage() {
         <div className="mb-4 p-4 bg-white border-2 border-blue-300 rounded-lg">
           <h3 className="text-lg font-semibold mb-3">새 집안일 추가</h3>
 
+          {/* 탭 선택 */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => {
+                setAddMode('custom');
+                setSelectedRuleId('');
+              }}
+              className={`flex-1 py-2 rounded-md border-2 transition-colors ${
+                addMode === 'custom'
+                  ? 'border-blue-500 bg-blue-100 text-blue-700 font-semibold'
+                  : 'border-gray-300 bg-white text-gray-700'
+              }`}
+            >
+              직접 입력
+            </button>
+            <button
+              onClick={() => setAddMode('from-rule')}
+              className={`flex-1 py-2 rounded-md border-2 transition-colors ${
+                addMode === 'from-rule'
+                  ? 'border-blue-500 bg-blue-100 text-blue-700 font-semibold'
+                  : 'border-gray-300 bg-white text-gray-700'
+              }`}
+            >
+              기존 규칙에서 선택
+            </button>
+          </div>
+
           <div className="space-y-3">
+            {/* 규칙 선택 드롭다운 (from-rule 모드에서만) */}
+            {addMode === 'from-rule' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  집안일 규칙 선택
+                </label>
+                <select
+                  value={selectedRuleId}
+                  onChange={e => setSelectedRuleId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">규칙을 선택하세요</option>
+                  {rules?.map(rule => (
+                    <option key={rule.id} value={rule.id}>
+                      {rule.emoji} {rule.title} ({rule.assignee})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 이모지
@@ -164,9 +234,12 @@ function DetailPage() {
               <button
                 onClick={() => {
                   setIsAddingTask(false);
+                  setAddMode('custom');
+                  setSelectedRuleId('');
                   setNewTaskTitle('');
                   setNewTaskEmoji('📝');
                   setNewTaskMemo('');
+                  setNewTaskAssignee(userType || '👦🏻');
                 }}
                 className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md transition-colors"
               >

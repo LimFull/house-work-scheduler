@@ -35,6 +35,11 @@ export class SchedulerController {
     return this.schedulerService.getScheduleStatus();
   }
 
+  @Get('rules')
+  getRules() {
+    return this.schedulerService.getRules();
+  }
+
   @Get('schedule')
   getSchedule(): HouseWorkSchedule | null {
     return this.schedulerService.getSchedule();

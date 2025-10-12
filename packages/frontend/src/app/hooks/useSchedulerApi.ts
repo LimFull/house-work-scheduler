@@ -18,6 +18,18 @@ interface ScheduledHouseWork {
   emoji: string;
 }
 
+export interface HouseWorkRule {
+  id: string;
+  title: string;
+  days: string[];
+  frequency: string;
+  assignee: string;
+  memo: string;
+  url: string;
+  isDone: boolean;
+  emoji: string;
+}
+
 interface MonthlyScheduleResponse {
   success: boolean;
   data: ScheduledHouseWork[];
@@ -274,6 +286,20 @@ export const useDeleteSchedule = () => {
       queryClient.invalidateQueries({
         queryKey: ['scheduler', 'schedule', 'date', data.date],
       });
+    },
+  });
+};
+
+// 집안일 규칙 조회
+export const useRules = () => {
+  return useQuery({
+    queryKey: ['scheduler', 'rules'],
+    queryFn: async (): Promise<HouseWorkRule[]> => {
+      const response = await fetch(`${API_BASE_URL}/scheduler/rules`);
+      if (!response.ok) {
+        throw new Error('규칙 조회 실패');
+      }
+      return response.json();
     },
   });
 };

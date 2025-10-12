@@ -661,6 +661,13 @@ export class HouseWorkSchedulerService implements OnModuleInit {
   }
 
   /**
+   * 집안일 규칙 목록을 반환합니다.
+   */
+  getRules(): HouseWorkRule[] {
+    return this.rules;
+  }
+
+  /**
    * 일회성 집안일을 추가합니다.
    */
   addOneTimeSchedule(
