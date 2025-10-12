@@ -46,7 +46,9 @@ export class SchedulerController {
   }
 
   @Get('schedule/:date')
-  getScheduleForDate(@Param('date') date: string): ScheduledHouseWork[] {
+  async getScheduleForDate(
+    @Param('date') date: string
+  ): Promise<ScheduledHouseWork[]> {
     return this.schedulerService.getScheduleForDate(date);
   }
 

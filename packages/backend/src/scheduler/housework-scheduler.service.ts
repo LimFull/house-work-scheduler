@@ -175,6 +175,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
         entity.originalHouseWorkId = item.originalHouseWorkId;
         entity.url = item.url;
         entity.isDone = item.isDone;
+        entity.emoji = item.emoji;
         entity.scheduledDate = new Date();
         return entity;
       });
@@ -218,7 +219,7 @@ export class HouseWorkSchedulerService implements OnModuleInit {
         itemDate.getMonth(),
         itemDate.getDate()
       );
-      return todayDateOnly > itemDateOnly;
+      return itemDateOnly >= todayDateOnly; // 오늘 이후(오늘 포함)만 남김
     });
   }
 
@@ -432,8 +433,30 @@ export class HouseWorkSchedulerService implements OnModuleInit {
 
   /**
    * 특정 날짜의 스케줄을 반환합니다.
+   * 과거 날짜는 MySQL에서, 현재/미래 날짜는 메모리에서 조회합니다.
    */
-  getScheduleForDate(date: string): ScheduledHouseWork[] {
+  async getScheduleForDate(date: string): Promise<ScheduledHouseWork[]> {
+    const today = new Date().toISOString().split('T')[0];
+
+    // 과거 날짜는 MySQL에서 조회
+    if (date < today) {
+      const pastWorks = await this.getPastHouseWorks(date, date);
+      return pastWorks.map(work => ({
+        id: work.houseWorkId,
+        title: work.title,
+        assignee: work.assignee,
+        memo: work.memo,
+        date: work.date,
+        dayOfWeek: work.dayOfWeek,
+        originalHouseWorkId: work.originalHouseWorkId,
+        url: work.url,
+        isDone: work.isDone,
+        source: 'database' as const,
+        emoji: work.emoji,
+      }));
+    }
+
+    // 현재/미래 날짜는 메모리에서 조회
     if (!this.schedule) {
       return [];
     }

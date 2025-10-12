@@ -12,7 +12,8 @@ function ScheduleItem({ schedule }: Props) {
     <div
       className={`text-sm font-medium mb-1 rounded-md text-center ${assignee === '👦🏻' ? 'bg-blue-100' : assignee === '👧🏻' ? 'bg-pink-100' : 'bg-yellow-100'}`}
     >
-      {schedule.emoji} {isDone ? '✅' : ''}
+      {schedule.emoji && `${schedule.emoji} `}
+      {isDone ? '✅' : ''}
     </div>
   );
 }
