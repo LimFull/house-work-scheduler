@@ -659,4 +659,66 @@ export class HouseWorkSchedulerService implements OnModuleInit {
       validUntil: this.schedule?.validUntil || null,
     };
   }
+
+  /**
+   * 일회성 집안일을 추가합니다.
+   */
+  addOneTimeSchedule(
+    title: string,
+    assignee: string,
+    date: string,
+    memo?: string,
+    emoji?: string
+  ): ScheduledHouseWork {
+    if (!this.schedule) {
+      throw new Error('스케줄이 초기화되지 않았습니다');
+    }
+
+    // UUID 생성 (간단한 방법)
+    const uuid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const dateObj = new Date(date);
+    const dayOfWeek = this.dayOfWeekNames[dateObj.getDay()];
+
+    const oneTimeSchedule: ScheduledHouseWork = {
+      id: `one-time-${uuid}_${date}`,
+      title,
+      assignee,
+      memo: memo || '',
+      date,
+      dayOfWeek,
+      originalHouseWorkId: `one-time-${uuid}`,
+      url: '',
+      isDone: false,
+      emoji: emoji || '📝',
+    };
+
+    this.schedule.items.push(oneTimeSchedule);
+
+    // 날짜순으로 재정렬
+    this.schedule.items.sort((a, b) => a.date.localeCompare(b.date));
+
+    this.logger.log(`일회성 집안일 추가: ${title} (${date})`);
+
+    return oneTimeSchedule;
+  }
+
+  /**
+   * 특정 스케줄을 삭제합니다.
+   */
+  deleteSchedule(id: string): boolean {
+    if (!this.schedule) {
+      return false;
+    }
+
+    const initialLength = this.schedule.items.length;
+    this.schedule.items = this.schedule.items.filter(item => item.id !== id);
+
+    const deleted = this.schedule.items.length < initialLength;
+
+    if (deleted) {
+      this.logger.log(`스케줄 삭제: ${id}`);
+    }
+
+    return deleted;
+  }
 }

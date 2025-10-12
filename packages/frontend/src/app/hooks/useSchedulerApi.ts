@@ -207,3 +207,73 @@ export const useDelaySchedule = () => {
     },
   });
 };
+
+// 일회성 집안일 추가
+export const useAddSchedule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      title,
+      assignee,
+      date,
+      memo,
+      emoji,
+    }: {
+      title: string;
+      assignee: string;
+      date: string;
+      memo?: string;
+      emoji?: string;
+    }): Promise<ScheduledHouseWork> => {
+      const response = await fetch(`${API_BASE_URL}/scheduler/schedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, assignee, date, memo, emoji }),
+      });
+
+      if (!response.ok) {
+        throw new Error('집안일 추가 실패');
+      }
+
+      return response.json();
+    },
+    onSuccess: data => {
+      // 관련된 모든 스케줄 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ['scheduler', 'schedule'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduler', 'monthly'] });
+      queryClient.invalidateQueries({
+        queryKey: ['scheduler', 'schedule', 'date', data.date],
+      });
+    },
+  });
+};
+
+// 스케줄 삭제
+export const useDeleteSchedule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, date }: { id: string; date: string }) => {
+      const response = await fetch(`${API_BASE_URL}/scheduler/schedule/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('집안일 삭제 실패');
+      }
+
+      return { id, date };
+    },
+    onSuccess: data => {
+      // 관련된 모든 스케줄 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ['scheduler', 'schedule'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduler', 'monthly'] });
+      queryClient.invalidateQueries({
+        queryKey: ['scheduler', 'schedule', 'date', data.date],
+      });
+    },
+  });
+};

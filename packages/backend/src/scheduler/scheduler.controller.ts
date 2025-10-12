@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Post, Put, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Body,
+  Delete,
+} from '@nestjs/common';
 import { HouseWorkSchedulerService } from './housework-scheduler.service';
 import {
   HouseWorkSchedule,
@@ -8,6 +16,14 @@ import {
 interface UpdateDoneStatusDto {
   isDone: boolean;
   assignee?: string;
+}
+
+interface CreateOneTimeScheduleDto {
+  title: string;
+  assignee: string;
+  date: string; // YYYY-MM-DD
+  memo?: string;
+  emoji?: string;
 }
 
 @Controller('scheduler')
@@ -95,5 +111,27 @@ export class SchedulerController {
   @Put('schedule/:id/delay')
   delaySchedule(@Param('id') id: string) {
     return this.schedulerService.delayScheduleDate(id);
+  }
+
+  /**
+   * 일회성 집안일을 추가합니다.
+   */
+  @Post('schedule')
+  createOneTimeSchedule(@Body() createDto: CreateOneTimeScheduleDto) {
+    return this.schedulerService.addOneTimeSchedule(
+      createDto.title,
+      createDto.assignee,
+      createDto.date,
+      createDto.memo,
+      createDto.emoji
+    );
+  }
+
+  /**
+   * 특정 스케줄을 삭제합니다.
+   */
+  @Delete('schedule/:id')
+  deleteSchedule(@Param('id') id: string) {
+    return this.schedulerService.deleteSchedule(id);
   }
 }

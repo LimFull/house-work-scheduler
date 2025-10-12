@@ -22,6 +22,12 @@ build/
 *.swp
 *.swo
 
+# Claude Code
+.claude/
+
+# Hack scripts
+hack/
+
 # OS
 .DS_Store
 Thumbs.db
