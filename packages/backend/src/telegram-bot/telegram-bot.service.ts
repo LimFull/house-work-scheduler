@@ -1,15 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
-import TelegramBot from 'node-telegram-bot-api';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class TelegramBotService {
   private readonly logger = new Logger(TelegramBotService.name);
-  private bot: TelegramBot;
+  private readonly botToken: string;
+  private readonly chatId: string;
 
-  constructor() {
-    this.bot = new TelegramBot(`${process.env.TELEGRAM_BOT_TOKEN}`);
+  constructor(private readonly httpService: HttpService) {
+    this.botToken = process.env.TELEGRAM_BOT_TOKEN!;
+    this.chatId = process.env.TELEGRAM_CHAT_ID!;
     this.logger.log(
-      `Telegram bot initialized, token: ${process.env.TELEGRAM_BOT_TOKEN}`
+      `Telegram bot service initialized with token: ${this.botToken}`
     );
   }
 
@@ -20,9 +23,7 @@ export class TelegramBotService {
     errorMessage?: string;
   }> {
     try {
-      const chatId = process.env.TELEGRAM_CHAT_ID;
-
-      if (!chatId) {
+      if (!this.chatId) {
         throw new Error('TELEGRAM_CHAT_ID environment variable is not set');
       }
 
@@ -30,7 +31,21 @@ export class TelegramBotService {
         throw new Error('Message cannot be empty');
       }
 
-      const result = await this.bot.sendMessage(chatId, message);
+      const url = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
+      const payload = {
+        chat_id: this.chatId,
+        text: message,
+      };
+
+      const response = await firstValueFrom(
+        this.httpService.post(url, payload, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        })
+      );
+
       this.logger.log(`텔레그램 메시지 전송 성공: ${message}`);
 
       return {
