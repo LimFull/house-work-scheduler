@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import fetch from 'node-fetch';
 
 @Injectable()
 export class TelegramBotService {
@@ -8,7 +7,7 @@ export class TelegramBotService {
   private readonly botToken: string;
   private readonly chatId: string;
 
-  constructor(private readonly httpService: HttpService) {
+  constructor() {
     this.botToken = process.env.TELEGRAM_BOT_TOKEN!;
     this.chatId = process.env.TELEGRAM_CHAT_ID!;
     this.logger.log(
@@ -37,14 +36,13 @@ export class TelegramBotService {
         text: message,
       };
 
-      const response = await firstValueFrom(
-        this.httpService.post(url, payload, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 10000,
-        })
-      );
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
       this.logger.log(`텔레그램 메시지 전송 성공: ${message}`);
 
