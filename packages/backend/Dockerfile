@@ -18,6 +18,9 @@ FROM node:20.18.1-alpine AS production
 
 WORKDIR /app
 
+# Install curl
+RUN apk add --no-cache curl
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nestjs -u 1001
