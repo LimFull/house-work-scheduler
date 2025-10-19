@@ -4,16 +4,19 @@ import TelegramBot from 'node-telegram-bot-api';
 @Injectable()
 export class TelegramBotService {
   private readonly logger = new Logger(TelegramBotService.name);
-  private readonly bot: TelegramBot = new TelegramBot(
-    `${process.env.TELEGRAM_BOT_TOKEN}`
-  );
+  private bot: TelegramBot;
 
-  constructor() {}
+  constructor() {
+    this.bot = new TelegramBot(`${process.env.TELEGRAM_BOT_TOKEN}`);
+    this.logger.log(
+      `Telegram bot initialized, token: ${process.env.TELEGRAM_BOT_TOKEN}`
+    );
+  }
 
   async sendMessage(message: string): Promise<{
     success: boolean;
     message?: string;
-    error?: any;
+    error?: unknown;
     errorMessage?: string;
   }> {
     try {
