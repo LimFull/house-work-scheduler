@@ -23,10 +23,10 @@ build/
 *.swo
 
 # Claude Code
-.claude/
+# .claude/
 
 # Hack scripts
-hack/
+# hack/
 
 # OS
 .DS_Store
