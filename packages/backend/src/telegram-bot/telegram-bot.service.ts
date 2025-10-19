@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import fetch from 'node-fetch';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 @Injectable()
 export class TelegramBotService {
@@ -30,19 +33,15 @@ export class TelegramBotService {
         throw new Error('Message cannot be empty');
       }
 
-      const url = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
-      const payload = {
-        chat_id: this.chatId,
-        text: message,
-      };
+      const curlCommand = `curl -s -X POST "https://api.telegram.org/bot${this.botToken}/sendMessage" -H "Content-Type: application/json" -d '{"chat_id": "${this.chatId}", "text": "${message}"}'`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const { stdout, stderr } = await execAsync(curlCommand);
+
+      if (stderr) {
+        throw new Error(`curl error: ${stderr}`);
+      }
+
+      const response = JSON.parse(stdout);
 
       this.logger.log(`텔레그램 메시지 전송 성공: ${message}`);
 
